@@ -4,22 +4,39 @@ import { useState, useEffect } from 'react'
 
 
 const Destination = () => {
-    const [flightData, setFlightData] = useState(null)
-    const {destination} = useParams()
+    const {departure, destination} = useParams()
+    const [departureAirports, setDepartureAirports] = useState(null)
+    const [arrivalAirports, setArrivalAirports] = useState(null)
+
+    const getAirports = async(query) => {
+        try {
+            const response = await fetch(`http://localhost:3001/flightapi/airports/${query}`)
+            const data = await response.json()
+            return data
+        } catch (error) {
+            console.error(error)
+        }
+    }
 
     useEffect(() => {
-        fetch(`http://localhost:3001/flightapi/destination/${destination}`)
-            .then(res => res.json())
-            .then(data => setFlightData(data))
-            .catch(err => console.error(err))
-    }, [destination])
+        const fetchData = async () => {
+            const dep = await getAirports(departure)
+            const arr = await getAirports(destination)
+            setDepartureAirports(dep)
+            setArrivalAirports(arr)
+        }
+        fetchData()
+    }, [departure, destination])
 
-    if (!flightData) {
+    if (!departureAirports || !arrivalAirports) {
         return <div>Loading...</div>
     }
 
     return (
-        <div>{JSON.stringify(flightData)}</div>
+        <div>
+            <div>departure: {JSON.stringify(departureAirports.suggestions.map((airport) => airport.id))}</div>
+            <div>destination: {JSON.stringify(arrivalAirports.suggestions.map((airport) => airport.id))}</div>
+        </div>
     )
 }
 
